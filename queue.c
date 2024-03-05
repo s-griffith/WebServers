@@ -1,7 +1,5 @@
 #include "queue.h"
 
-// Can potentially use Node struct as well!
-
 typedef struct Node
 {
     int connfd;
@@ -12,6 +10,7 @@ typedef struct Node
 struct Queue_t
 {
     int size;
+    int max;
     Node m_first;
     Node m_last;
 };
@@ -29,7 +28,7 @@ Node NodeCreate()
     return node;
 }
 
-Queue QueueCreate()
+Queue QueueCreate(int max)
 {
     Node node = NodeCreate();
     Queue queue = calloc(1, sizeof(*queue));
@@ -38,6 +37,7 @@ Queue QueueCreate()
         return NULL;
     }
     queue->size = 0;
+    queue->max = max;
     queue->m_first = node;
     queue->m_last = node;
     return queue;
@@ -56,11 +56,15 @@ void QueueDestroy(Queue queue)
     free(queue);
 }
 
+//Add condition variables!
 QueueResult enqueue(Queue queue, int item)
 {
     if (!queue)
     {
         return QUEUE_NULL_ARGUMENT;
+    }
+    if (queue->size == queue->max) {
+        return QUEUE_FULL;
     }
     if (queue->size == 0)
     {
@@ -81,6 +85,8 @@ QueueResult enqueue(Queue queue, int item)
     return QUEUE_SUCCESS;
 }
 
+
+//Add condition variables!
 QueueResult dequeue(Queue queue)
 {
     if (!queue)
@@ -126,13 +132,16 @@ int getSize(Queue queue) {
 int main()
 {
 
-    Queue q = QueueCreate();
+    Queue q = QueueCreate(5);
     enqueue(q, 2);
     enqueue(q, 4);
     printf("%d\n", q->m_first->connfd);
     printf("%d\n", q->m_first->m_next->connfd);
     dequeue(q);
     printf("%d\n", q->m_first->connfd);
-
+    dequeue(q);
+    enqueue(q, 6);
+    printf("%d\n", q->m_first->connfd);
+    QueueDestroy(q);
     return 0;
 }

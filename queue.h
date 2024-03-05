@@ -3,6 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <pthread.h>
+#include "request.h"
+#include "segel.h"
 
 typedef struct Queue_t* Queue;
 
@@ -10,10 +13,11 @@ typedef enum {
     QUEUE_SUCCESS,
     QUEUE_NULL_ARGUMENT,
     QUEUE_EMPTY,
-    QUEUE_ERROR
+    QUEUE_ERROR,
+    QUEUE_FULL
 } QueueResult;
 
-Queue QueueCreate();
+Queue QueueCreate(int max);
 
 void QueueDestroy(Queue queue);
 
