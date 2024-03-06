@@ -23,7 +23,7 @@ void QueueDestroy(Queue queue);
 
 QueueResult enqueue(Queue queue, int item);
 
-QueueResult dequeue(Queue queue);
+int dequeue(Queue queue);
 
 int isEmpty(Queue queue);
 

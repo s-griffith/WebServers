@@ -1,5 +1,10 @@
 #include "queue.h"
 
+
+pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+
+
 typedef struct Node
 {
     int connfd;
@@ -56,6 +61,7 @@ void QueueDestroy(Queue queue)
     free(queue);
 }
 
+
 //Add condition variables!
 QueueResult enqueue(Queue queue, int item)
 {
@@ -63,13 +69,17 @@ QueueResult enqueue(Queue queue, int item)
     {
         return QUEUE_NULL_ARGUMENT;
     }
+    pthread_mutex_lock(&m);
     if (queue->size == queue->max) {
+         pthread_mutex_unlock(&m);
         return QUEUE_FULL;
     }
     if (queue->size == 0)
     {
         queue->m_first->connfd = item;
         queue->size++;
+        pthread_cond_signal(&cond);
+        pthread_mutex_unlock(&m);
         return QUEUE_SUCCESS;
     }
     Node node = NodeCreate();
@@ -82,22 +92,28 @@ QueueResult enqueue(Queue queue, int item)
     queue->m_last->m_next = node;
     queue->m_last = node;
     queue->size++;
+    printf("%d 95q", item);
+    pthread_cond_signal(&cond);
+    pthread_mutex_unlock(&m);
     return QUEUE_SUCCESS;
 }
 
 
 //Add condition variables!
-QueueResult dequeue(Queue queue)
+int dequeue(Queue queue)
 {
     if (!queue)
     {
-        return QUEUE_NULL_ARGUMENT;
+        //return QUEUE_NULL_ARGUMENT;
+        return -1;
     }
-    if (queue->size == 0)
+    pthread_mutex_lock(&m);
+    while (queue->size == 0)
     {
-        return QUEUE_EMPTY;
+        pthread_cond_wait(&cond, &m);
     }
     Node toRemove = queue->m_first;
+    int item = toRemove->connfd;
     if (!toRemove->m_next) //same as: queue->size == 1
     {
         //leave an empty node:
@@ -109,7 +125,8 @@ QueueResult dequeue(Queue queue)
         free(toRemove);
     }
     queue->size--;
-    return QUEUE_SUCCESS;
+    pthread_mutex_unlock(&m);
+    return item;
 }
 
 int isEmpty(Queue queue) {
@@ -129,19 +146,3 @@ int getSize(Queue queue) {
     return queue->size;
 }
 
-int main()
-{
-
-    Queue q = QueueCreate(5);
-    enqueue(q, 2);
-    enqueue(q, 4);
-    printf("%d\n", q->m_first->connfd);
-    printf("%d\n", q->m_first->m_next->connfd);
-    dequeue(q);
-    printf("%d\n", q->m_first->connfd);
-    dequeue(q);
-    enqueue(q, 6);
-    printf("%d\n", q->m_first->connfd);
-    QueueDestroy(q);
-    return 0;
-}
