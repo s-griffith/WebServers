@@ -8,6 +8,7 @@
 #include "segel.h"
 
 typedef struct Queue_t* Queue;
+typedef struct Node* Node;
 
 typedef enum {
     QUEUE_SUCCESS,
@@ -30,6 +31,8 @@ int isEmpty(Queue queue);
 int isFull(Queue queue);
 
 int getSize(Queue queue);
+
+Node getHead(Queue queue);
 
 
 

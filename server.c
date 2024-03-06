@@ -11,11 +11,7 @@
 //
 pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
-//pthread_mutex_lock(&m);
-//pthread_mutex_unlock(&m);
-//pthread_cond_signal(&c);
-//pthread_cond_wait(&c, &m);
-int inProcess = 0;
+int sumOfProcess = 0;
 
 typedef struct Args
 {
@@ -43,21 +39,13 @@ void *ThreadsHandle(void *arguments)
     struct Args *queues = arguments;
     while (1)
     {
-        //These two lines must happen together, otherwise can have situation where we have too many requests
-
-        //pthread_mutex_lock(&mutex_1);
-        int connfd = dequeue(queues->waiting);
-        //enqueue(queues->handled, connfd);
-        inProcess ++ ;
-        printf("%d\n", connfd);
-        //pthread_mutex_unlock(&mutex_1);
+        int connfd = dequeue(queues->waiting);//good story:)
 
         requestHandle(connfd);
         Close(connfd);
         
         pthread_mutex_lock(&mutex_1);
-        //dequeue(queues->handled); //does this need to in a critical section????
-        inProcess++;
+        sumOfProcess--;
         pthread_cond_signal(&c);
         pthread_mutex_unlock(&mutex_1);
     }
@@ -68,9 +56,8 @@ int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen, threads_size, queue_size;
     struct sockaddr_in clientaddr;
-    char* schedalg;
+    char* schedalg; //to fix
     getargs(&port, &threads_size, &queue_size, schedalg, argc, argv);
-    // To add: arg[4] is the schedalg!!!!!!!!
     Queue waiting = QueueCreate(queue_size);
     Queue handled = QueueCreate(queue_size);
     struct Args queues;
@@ -86,33 +73,36 @@ int main(int argc, char *argv[])
         }
     }
     listenfd = Open_listenfd(port);
-    int isFull = 0;
-    //pthread_mutex_unlock(&mutex_1);
+    int isFull = 0; //bool?
+    
+    
     while (1)
     {
-        printf("91\n");
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *)&clientlen);
-        //Critical section:
-         printf("%d 95\n", connfd);
+        isFull =0;
         pthread_mutex_lock(&mutex_1);
-        printf("hi\n");
-        if (getSize(waiting) + getSize(handled) >= queue_size) {
-            if(schedalg == "dt"){
+        
+        while (sumOfProcess >= queue_size) {
+            if(!strcmp(argv[4], "dt")){
                 Close(connfd);
                 isFull = 1;
+                pthread_mutex_unlock(&mutex_1);
+                break;
             }
-            if(!strcmp(schedalg,"block")){
+            if(!strcmp(argv[4],"block")){//schedalg, not argv[4]
                 pthread_cond_wait(&c, &mutex_1);
+            }
+            if(!strcmp(argv[4],"dh")){
+               Close(dequeue(queues.waiting));//by piazza it cannot be empty 
+               sumOfProcess--;
             }
         }
         pthread_mutex_unlock(&mutex_1);
 
-
-        if(!isFull){
-            
-            printf("hiiii 111\n");
-            enqueue(waiting, connfd);
+        if(!isFull){//maybe sync???
+          sumOfProcess++;
+          enqueue(waiting, connfd);
         }
     }
 }

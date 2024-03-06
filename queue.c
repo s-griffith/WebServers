@@ -32,6 +32,9 @@ Node NodeCreate()
     node->m_next = NULL;
     return node;
 }
+Node getHead(Queue queue){
+    return queue->m_first;
+}
 
 Queue QueueCreate(int max)
 {
@@ -92,7 +95,6 @@ QueueResult enqueue(Queue queue, int item)
     queue->m_last->m_next = node;
     queue->m_last = node;
     queue->size++;
-    printf("%d 95q", item);
     pthread_cond_signal(&cond);
     pthread_mutex_unlock(&m);
     return QUEUE_SUCCESS;
