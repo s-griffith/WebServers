@@ -7,8 +7,8 @@ struct Node_t
 {
     int connfd;
     struct timeval m_arrival;
-    struct Node m_previous;
-    struct Node m_next;
+    Node m_previous;
+    Node m_next;
 };
 
 struct Queue_t
