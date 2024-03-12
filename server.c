@@ -17,7 +17,15 @@ typedef struct Args
 {
     Queue waiting;
     Queue handled;
+    threads_stats stats;
 } Args;
+
+typedef struct Threads_stats{
+	int id;
+	int stat_req;
+	int dynm_req;
+	int total_req;
+} * threads_stats;
 
 // HW3: Parse the new arguments too
 void getargs(int *port, int *threads, int *queue_size, char *schedalg, int argc, char *argv[])
@@ -40,10 +48,17 @@ void *ThreadsHandle(void *arguments)
     while (1)
     {
         int connfd = dequeue(queues->waiting); // good story:)
-
-        requestHandle(connfd);
+        int status = requestHandle(connfd);
         Close(connfd);
-
+        switch (status) {
+            case STATIC:
+                queues->stats.stat_req++;
+                break;
+            case DYNAMIC:
+                queues->stats.dynm_req++;
+                break;
+        }
+        queues->stats.total_req++;
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
@@ -64,8 +79,14 @@ int main(int argc, char *argv[])
     queues.waiting = waiting;
     queues.handled = handled;
     pthread_t threads[threads_size];
+    threads_stats stats[threads_size];
     for (int i = 0; i < threads_size; i++)
     {
+        queues.stats = stats[i];
+        stats[i].id = i;
+        stats[i].stat_req = 0;
+        stats[i].dynm_req = 0;
+        stats[i].total_req = 0;
         int err = pthread_create(&threads[i], NULL, ThreadsHandle, (void *)&queues);
         if (err != 0)
         {
