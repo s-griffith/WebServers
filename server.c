@@ -49,9 +49,15 @@ void *ThreadsHandle(void *arguments)
     struct Args *queues = arguments;
     while (1)
     {
-        int connfd = dequeue(queues->waiting); // good story:)
+        Node request = dequeue(queues->waiting); // good story:)
+        struct timeval dispatch;
+        if (gettimeofday(&dispatch, NULL)) {
+            //error!
+        }
+        dispatch -= request->m_arrival;
         int status = requestHandle(connfd);
         Close(connfd);
+        free(request);
         switch (status)
         {
         case STATIC:
@@ -66,7 +72,7 @@ void *ThreadsHandle(void *arguments)
         sumOfProcess--;
         pthread_cond_signal(&c);
         pthread_mutex_unlock(&mutex_1);
-        printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
+        //printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
     }
     // How do we want to break this loop????????????????????????????????????????????????????
 }
@@ -83,7 +89,6 @@ int main(int argc, char *argv[])
     struct Args queues[threads_size];
     for (int i = 0; i < threads_size; i++)
     {
-printf("Before statsi:\n");
         stats[i].id = i;
         stats[i].stat_req = 0;
         stats[i].dynm_req = 0;
@@ -104,6 +109,10 @@ printf("Before statsi:\n");
     {
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *)&clientlen);
+        struct timeval arrival;
+        if (gettimeofday(&arrival, NULL)) {
+            //error!
+        }
         isFull = 0;
         pthread_mutex_lock(&mutex_1);
 
@@ -117,7 +126,7 @@ printf("Before statsi:\n");
                 break;
             }
             if (!strcmp(argv[4], "block"))
-            { // schedalg, not argv[4]
+            {
                 pthread_cond_wait(&c, &mutex_1);
             }
             if (!strcmp(argv[4], "dh"))
@@ -131,7 +140,7 @@ printf("Before statsi:\n");
         if (!isFull)
         { // maybe sync???
             sumOfProcess++;
-            if (enqueue(waiting, connfd) != QUEUE_SUCCESS)
+            if (enqueue(waiting, connfd, arrival) != QUEUE_SUCCESS)
             {
                 perror("Enqueue Error!"); // Decide what to do with errors!
             }

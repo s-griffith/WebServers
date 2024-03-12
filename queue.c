@@ -6,6 +6,7 @@ pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 typedef struct Node
 {
     int connfd;
+    struct timeval m_arrival;
     struct Node *m_previous;
     struct Node *m_next;
 } *Node;
@@ -18,7 +19,7 @@ struct Queue_t
     Node m_last;
 };
 
-Node NodeCreate()
+Node NodeCreate(struct timeval arrival = {0, 0})
 {
     Node node = calloc(1, sizeof(*node));
     if (!node)
@@ -26,6 +27,7 @@ Node NodeCreate()
         return NULL;
     }
     node->connfd = 0;
+    node->m_arrival = arrival;
     node->m_previous = NULL;
     node->m_next = NULL;
     return node;
@@ -64,7 +66,7 @@ void QueueDestroy(Queue queue)
 }
 
 // Add condition variables!
-QueueResult enqueue(Queue queue, int item)
+QueueResult enqueue(Queue queue, int item, struct timeval arrival)
 {
     if (!queue)
     {
@@ -80,11 +82,12 @@ QueueResult enqueue(Queue queue, int item)
     {
         queue->m_first->connfd = item;
         queue->size++;
+        queue->m_node->m_arrival = arrival;
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&m);
         return QUEUE_SUCCESS;
     }
-    Node node = NodeCreate();
+    Node node = NodeCreate(arrival);
     if (!node)
     {
         return QUEUE_ERROR;
@@ -100,7 +103,7 @@ QueueResult enqueue(Queue queue, int item)
 }
 
 // Add condition variables!
-int dequeue(Queue queue)
+Node dequeue(Queue queue)
 {
     if (!queue)
     {
@@ -113,7 +116,7 @@ int dequeue(Queue queue)
         pthread_cond_wait(&cond, &m);
     }
     Node toRemove = queue->m_first;
-    int item = toRemove->connfd;
+    //int item = toRemove->connfd;
     if (!toRemove->m_next) // same as: queue->size == 1
     {
         // leave an empty node:
@@ -123,11 +126,11 @@ int dequeue(Queue queue)
     {
         toRemove->m_next->m_previous = NULL;
         queue->m_first = toRemove->m_next;
-        free(toRemove);
+        //free(toRemove);
     }
     queue->size--;
     pthread_mutex_unlock(&m);
-    return item;
+    return toRemove;
 }
 
 int isEmpty(Queue queue)

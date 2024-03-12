@@ -6,6 +6,8 @@
 #include <pthread.h>
 #include "request.h"
 #include "segel.h"
+#include <sys/time.h>
+
 
 typedef struct Queue_t* Queue;
 typedef struct Node* Node;
@@ -22,9 +24,9 @@ Queue QueueCreate(int max);
 
 void QueueDestroy(Queue queue);
 
-QueueResult enqueue(Queue queue, int item);
+QueueResult enqueue(Queue queue, int item, struct timeval arrival);
 
-int dequeue(Queue queue);
+Node dequeue(Queue queue);
 
 int isEmpty(Queue queue);
 
