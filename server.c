@@ -1,4 +1,5 @@
 #include "queue.h"
+#include <sys/time.h>
 
 //
 // server.c: A very, very simple web server
@@ -49,12 +50,13 @@ void *ThreadsHandle(void *arguments)
     struct Args *queues = arguments;
     while (1)
     {
-        struct Node request = dequeue(queues->waiting); // good story:)
+        Node request = dequeue(queues->waiting); // good story:)
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL)) {
             //error!
         }
-        dispatch -= request->m_arrival;
+        struct timeval res;
+        timersub(&dispatch, &request->m_arrival, &res);
         int status = requestHandle(request->connfd);
         Close(request->connfd);
         free(request);
