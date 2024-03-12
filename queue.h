@@ -22,7 +22,7 @@ typedef enum {
 
 Queue QueueCreate(int max);
 
-Node NodeCreate(struct timeval arrival = {0, 0});
+Node NodeCreate();
 
 void QueueDestroy(Queue queue);
 
