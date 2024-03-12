@@ -92,7 +92,7 @@ int dequeue(Queue queue, struct timeval* arrival)
     if (!queue)
     {
         // return QUEUE_NULL_ARGUMENT;
-        return NULL;
+        return -1;
     }
     pthread_mutex_lock(&m);
     while (queue->size == 0)
@@ -139,13 +139,4 @@ int isFull(Queue queue)
 int getSize(Queue queue)
 {
     return queue->size;
-}
-
-int main() {
-    Queue q = QueueCreate(5);
-    struct timeval curr;
-    gettimeofday(&curr, NULL);
-    enqueue(q, 3, curr);
-    Node n = dequeue(q);
-    printf("n's ID: %d\n", n->connfd);
 }
