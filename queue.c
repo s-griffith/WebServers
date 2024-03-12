@@ -3,7 +3,7 @@
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-typedef struct Node
+struct Node
 {
     int connfd;
     struct timeval m_arrival;
@@ -82,7 +82,7 @@ QueueResult enqueue(Queue queue, int item, struct timeval arrival)
     {
         queue->m_first->connfd = item;
         queue->size++;
-        queue->m_node->m_arrival = arrival;
+        queue->m_first->m_arrival = arrival;
         pthread_cond_signal(&cond);
         pthread_mutex_unlock(&m);
         return QUEUE_SUCCESS;
@@ -108,7 +108,7 @@ Node dequeue(Queue queue)
     if (!queue)
     {
         // return QUEUE_NULL_ARGUMENT;
-        return -1;
+        return NULL;
     }
     pthread_mutex_lock(&m);
     while (queue->size == 0)

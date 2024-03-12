@@ -22,6 +22,8 @@ typedef enum {
 
 Queue QueueCreate(int max);
 
+Node NodeCreate(struct timeval arrival = {0, 0});
+
 void QueueDestroy(Queue queue);
 
 QueueResult enqueue(Queue queue, int item, struct timeval arrival);
