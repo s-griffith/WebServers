@@ -66,7 +66,7 @@ void *ThreadsHandle(void *arguments)
         sumOfProcess--;
         pthread_cond_signal(&c);
         pthread_mutex_unlock(&mutex_1);
-        printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: ")
+        printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: ", queues->stats->id, queues->stats->stat_req, queues->stats->dynm_req, queues->stats->total_req);
     }
     // How do we want to break this loop????????????????????????????????????????????????????
 }
@@ -121,7 +121,7 @@ int main(int argc, char *argv[])
             }
             if (!strcmp(argv[4], "dh"))
             {
-                Close(dequeue(queues.waiting)); // by piazza it cannot be empty
+                Close(dequeue(waiting)); // by piazza it cannot be empty
                 sumOfProcess--;
             }
         }
