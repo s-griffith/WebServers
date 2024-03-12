@@ -58,7 +58,7 @@ void *ThreadsHandle(void *arguments)
         }
         struct timeval res;
         timersub(&dispatch, &arrival, &res);
-        int status = requestHandle(connfd);
+        int status = requestHandle(connfd, arrival, res, queues->stats);
         Close(request->connfd);
         free(request);
         switch (status)
