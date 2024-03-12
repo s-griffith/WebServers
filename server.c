@@ -59,8 +59,7 @@ void *ThreadsHandle(void *arguments)
         struct timeval res;
         timersub(&dispatch, &arrival, &res);
         int status = requestHandle(connfd);
-        Close(request->connfd);
-        free(request);
+        Close(connfd);
         switch (status)
         {
         case STATIC:

@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "request.h"
-//#include "segel.h"
+#include "segel.h"
 #include <sys/time.h>
 
 
