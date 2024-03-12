@@ -17,10 +17,10 @@ typedef struct Args
 {
     Queue waiting;
     Queue handled;
-}Args;
+} Args;
 
 // HW3: Parse the new arguments too
-void getargs(int *port, int *threads, int *queue_size, char* schedalg, int argc, char *argv[])
+void getargs(int *port, int *threads, int *queue_size, char *schedalg, int argc, char *argv[])
 {
     if (argc < 5)
     {
@@ -39,24 +39,24 @@ void *ThreadsHandle(void *arguments)
     struct Args *queues = arguments;
     while (1)
     {
-        int connfd = dequeue(queues->waiting);//good story:)
+        int connfd = dequeue(queues->waiting); // good story:)
 
         requestHandle(connfd);
         Close(connfd);
-        
+
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
         pthread_mutex_unlock(&mutex_1);
     }
-    //How do we want to break this loop????????????????????????????????????????????????????
+    // How do we want to break this loop????????????????????????????????????????????????????
 }
 
 int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen, threads_size, queue_size;
     struct sockaddr_in clientaddr;
-    char* schedalg; //to fix
+    char *schedalg; // to fix
     getargs(&port, &threads_size, &queue_size, schedalg, argc, argv);
     Queue waiting = QueueCreate(queue_size);
     Queue handled = QueueCreate(queue_size);
@@ -73,38 +73,43 @@ int main(int argc, char *argv[])
         }
     }
     listenfd = Open_listenfd(port);
-    int isFull = 0; //bool?
-    
-    
+    int isFull = 0; // bool?
+
     while (1)
     {
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *)&clientlen);
-        isFull =0;
+        isFull = 0;
         pthread_mutex_lock(&mutex_1);
-        
-        while (sumOfProcess >= queue_size) {
-            if(!strcmp(argv[4], "dt")){
+
+        while (sumOfProcess >= queue_size)
+        {
+            if (!strcmp(argv[4], "dt"))
+            {
                 Close(connfd);
                 isFull = 1;
                 pthread_mutex_unlock(&mutex_1);
                 break;
             }
-            if(!strcmp(argv[4],"block")){//schedalg, not argv[4]
+            if (!strcmp(argv[4], "block"))
+            { // schedalg, not argv[4]
                 pthread_cond_wait(&c, &mutex_1);
             }
-            if(!strcmp(argv[4],"dh")){
-               Close(dequeue(queues.waiting));//by piazza it cannot be empty 
-               sumOfProcess--;
+            if (!strcmp(argv[4], "dh"))
+            {
+                Close(dequeue(queues.waiting)); // by piazza it cannot be empty
+                sumOfProcess--;
             }
         }
         pthread_mutex_unlock(&mutex_1);
 
-        if(!isFull){//maybe sync???
-          sumOfProcess++;
-          enqueue(waiting, connfd);
+        if (!isFull)
+        { // maybe sync???
+            sumOfProcess++;
+            if (enqueue(waiting, connfd) != QueueResult::Queue_SUCCESS)
+            {
+                perror("Enqueue Error!"); //Decide what to do with errors!
+            }
         }
     }
 }
-
-

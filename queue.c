@@ -1,9 +1,7 @@
 #include "queue.h"
 
-
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
-
 
 typedef struct Node
 {
@@ -32,7 +30,8 @@ Node NodeCreate()
     node->m_next = NULL;
     return node;
 }
-Node getHead(Queue queue){
+Node getHead(Queue queue)
+{
     return queue->m_first;
 }
 
@@ -64,8 +63,7 @@ void QueueDestroy(Queue queue)
     free(queue);
 }
 
-
-//Add condition variables!
+// Add condition variables!
 QueueResult enqueue(Queue queue, int item)
 {
     if (!queue)
@@ -73,8 +71,9 @@ QueueResult enqueue(Queue queue, int item)
         return QUEUE_NULL_ARGUMENT;
     }
     pthread_mutex_lock(&m);
-    if (queue->size == queue->max) {
-         pthread_mutex_unlock(&m);
+    if (queue->size == queue->max)
+    {
+        pthread_mutex_unlock(&m);
         return QUEUE_FULL;
     }
     if (queue->size == 0)
@@ -100,13 +99,12 @@ QueueResult enqueue(Queue queue, int item)
     return QUEUE_SUCCESS;
 }
 
-
-//Add condition variables!
+// Add condition variables!
 int dequeue(Queue queue)
 {
     if (!queue)
     {
-        //return QUEUE_NULL_ARGUMENT;
+        // return QUEUE_NULL_ARGUMENT;
         return -1;
     }
     pthread_mutex_lock(&m);
@@ -116,12 +114,13 @@ int dequeue(Queue queue)
     }
     Node toRemove = queue->m_first;
     int item = toRemove->connfd;
-    if (!toRemove->m_next) //same as: queue->size == 1
+    if (!toRemove->m_next) // same as: queue->size == 1
     {
-        //leave an empty node:
+        // leave an empty node:
         toRemove->connfd = 0;
     }
-    else {
+    else
+    {
         toRemove->m_next->m_previous = NULL;
         queue->m_first = toRemove->m_next;
         free(toRemove);
@@ -131,20 +130,23 @@ int dequeue(Queue queue)
     return item;
 }
 
-int isEmpty(Queue queue) {
-    if (queue->size == 0) {
+int isEmpty(Queue queue)
+{
+    if (queue->size == 0)
+    {
         return 1;
     }
     return 0;
 }
 
-int isFull(Queue queue) {
-    //Check according to max size given
-    //Add max size as parameter once know in what format received
+int isFull(Queue queue)
+{
+    // Check according to max size given
+    // Add max size as parameter once know in what format received
     return 0;
 }
 
-int getSize(Queue queue) {
+int getSize(Queue queue)
+{
     return queue->size;
 }
-
