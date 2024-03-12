@@ -20,7 +20,7 @@ typedef struct Args
 {
     Queue waiting;
     Queue handled;
-    struct Threads_stats stats;
+    threads_stats stats;
 } Args;
 
 // HW3: Parse the new arguments too
@@ -55,13 +55,13 @@ void *ThreadsHandle(void *arguments)
         switch (status)
         {
         case STATIC:
-            queues->stats.stat_req++;
+            queues->stats->stat_req++;
             break;
         case DYNAMIC:
-            queues->stats.dynm_req++;
+            queues->stats->dynm_req++;
             break;
         }
-        queues->stats.total_req++;
+        queues->stats->total_req++;
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
@@ -79,17 +79,17 @@ int main(int argc, char *argv[])
     Queue waiting = QueueCreate(queue_size);
     Queue handled = QueueCreate(queue_size);
     pthread_t threads[threads_size];
-    struct Threads_stats stats[threads_size];
+    threads_stats stats[threads_size];
     struct Args queues[threads_size];
     for (int i = 0; i < threads_size; i++)
     {
-        stats[i].id = i;
-        stats[i].stat_req = 0;
-        stats[i].dynm_req = 0;
-        stats[i].total_req = 0;
-        queues[i].waiting = waiting;
-        queues[i].handled = handled;
-        queues[i].stats = stats[i];
+        stats[i]->id = i;
+        stats[i]->stat_req = 0;
+        stats[i]->dynm_req = 0;
+        stats[i]->total_req = 0;
+        queues[i]->waiting = waiting;
+        queues[i]->handled = handled;
+        queues[i]->stats = stats[i];
         int err = pthread_create(&threads[i], NULL, ThreadsHandle, (void *)&queues[i]);
         if (err != 0)
         {
