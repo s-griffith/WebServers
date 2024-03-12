@@ -10,7 +10,7 @@
 
 
 typedef struct Queue_t* Queue;
-typedef struct Node* Node;
+typedef struct Node_t* Node;
 
 typedef enum {
     QUEUE_SUCCESS,

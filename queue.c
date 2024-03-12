@@ -3,13 +3,13 @@
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-struct Node
+struct Node_t
 {
     int connfd;
     struct timeval m_arrival;
     struct Node *m_previous;
     struct Node *m_next;
-} *Node;
+};
 
 struct Queue_t
 {
@@ -19,7 +19,7 @@ struct Queue_t
     Node m_last;
 };
 
-Node NodeCreate(struct timeval arrival = {0, 0})
+Node NodeCreate()
 {
     Node node = calloc(1, sizeof(*node));
     if (!node)
@@ -27,7 +27,6 @@ Node NodeCreate(struct timeval arrival = {0, 0})
         return NULL;
     }
     node->connfd = 0;
-    node->m_arrival = arrival;
     node->m_previous = NULL;
     node->m_next = NULL;
     return node;
@@ -87,7 +86,8 @@ QueueResult enqueue(Queue queue, int item, struct timeval arrival)
         pthread_mutex_unlock(&m);
         return QUEUE_SUCCESS;
     }
-    Node node = NodeCreate(arrival);
+    Node node = NodeCreate();
+    node->m_arrival = arrival;
     if (!node)
     {
         return QUEUE_ERROR;
