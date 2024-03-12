@@ -6,8 +6,7 @@
 #include "request.h"
 
 #define HANDLE_ERROR -1;
-#define STATIC 1;
-#define DYNAMIC 0;
+
 
 // requestError(      fd,    filename,        "404",    "Not found", "OS-HW3 Server could not find this file");
 void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longmsg) 

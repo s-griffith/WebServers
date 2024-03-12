@@ -9,9 +9,19 @@
 // Repeatedly handles HTTP requests sent to this port number.
 // Most of the work is done within routines written in request.c
 //
+#define STATIC 1
+#define DYNAMIC 0
 pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
 int sumOfProcess = 0;
+
+typedef struct Threads_stats
+{
+    int id;
+    int stat_req;
+    int dynm_req;
+    int total_req;
+} *threads_stats;
 
 typedef struct Args
 {
@@ -20,15 +30,8 @@ typedef struct Args
     threads_stats stats;
 } Args;
 
-typedef struct Threads_stats{
-	int id;
-	int stat_req;
-	int dynm_req;
-	int total_req;
-} * threads_stats;
-
 // HW3: Parse the new arguments too
-void getargs(int *port, int *threads, int *queue_size, char *schedalg, int argc, char *argv[])
+void getargs(int *port, int *threads, int *queue_size, int argc, char *argv[])
 {
     if (argc < 5)
     {
@@ -38,7 +41,6 @@ void getargs(int *port, int *threads, int *queue_size, char *schedalg, int argc,
     *port = atoi(argv[1]);
     *threads = atoi(argv[2]);
     *queue_size = atoi(argv[3]);
-    schedalg = argv[4];
 }
 
 // Check for errors and check QUEUESTATUS
@@ -50,19 +52,21 @@ void *ThreadsHandle(void *arguments)
         int connfd = dequeue(queues->waiting); // good story:)
         int status = requestHandle(connfd);
         Close(connfd);
-        switch (status) {
-            case STATIC:
-                queues->stats.stat_req++;
-                break;
-            case DYNAMIC:
-                queues->stats.dynm_req++;
-                break;
+        switch (status)
+        {
+        case STATIC:
+            queues->stats->stat_req++;
+            break;
+        case DYNAMIC:
+            queues->stats->dynm_req++;
+            break;
         }
-        queues->stats.total_req++;
+        queues->stats->total_req++;
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
         pthread_mutex_unlock(&mutex_1);
+        printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: ")
     }
     // How do we want to break this loop????????????????????????????????????????????????????
 }
@@ -71,22 +75,21 @@ int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen, threads_size, queue_size;
     struct sockaddr_in clientaddr;
-    char *schedalg; // to fix
-    getargs(&port, &threads_size, &queue_size, schedalg, argc, argv);
+    getargs(&port, &threads_size, &queue_size, argc, argv);
     Queue waiting = QueueCreate(queue_size);
     Queue handled = QueueCreate(queue_size);
-    struct Args queues;
-    queues.waiting = waiting;
-    queues.handled = handled;
     pthread_t threads[threads_size];
     threads_stats stats[threads_size];
     for (int i = 0; i < threads_size; i++)
     {
+        stats[i]->id = i;
+        stats[i]->stat_req = 0;
+        stats[i]->dynm_req = 0;
+        stats[i]->total_req = 0;
+        struct Args queues;
+        queues.waiting = waiting;
+        queues.handled = handled;
         queues.stats = stats[i];
-        stats[i].id = i;
-        stats[i].stat_req = 0;
-        stats[i].dynm_req = 0;
-        stats[i].total_req = 0;
         int err = pthread_create(&threads[i], NULL, ThreadsHandle, (void *)&queues);
         if (err != 0)
         {
@@ -94,7 +97,7 @@ int main(int argc, char *argv[])
         }
     }
     listenfd = Open_listenfd(port);
-    int isFull = 0; // bool?
+    int isFull = 0;
 
     while (1)
     {
@@ -127,9 +130,9 @@ int main(int argc, char *argv[])
         if (!isFull)
         { // maybe sync???
             sumOfProcess++;
-            if (enqueue(waiting, connfd) != QueueResult::Queue_SUCCESS)
+            if (enqueue(waiting, connfd) != QUEUE_SUCCESS)
             {
-                perror("Enqueue Error!"); //Decide what to do with errors!
+                perror("Enqueue Error!"); // Decide what to do with errors!
             }
         }
     }
