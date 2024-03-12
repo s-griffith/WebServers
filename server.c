@@ -56,7 +56,7 @@ void *ThreadsHandle(void *arguments)
         }
         dispatch -= request->m_arrival;
         int status = requestHandle(request->connfd);
-        Close(connfd);
+        Close(request->connfd);
         free(request);
         switch (status)
         {
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             }
             if (!strcmp(argv[4], "dh"))
             {
-                Close(dequeue(waiting)->conffd); // by piazza it cannot be empty
+                Close(dequeue(waiting)->connfd); // by piazza it cannot be empty
                 sumOfProcess--;
             }
         }

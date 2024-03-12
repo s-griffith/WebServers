@@ -3,22 +3,6 @@
 pthread_mutex_t m = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
 
-struct Node_t
-{
-    int connfd;
-    struct timeval m_arrival;
-    Node m_previous;
-    Node m_next;
-};
-
-struct Queue_t
-{
-    int size;
-    int max;
-    Node m_first;
-    Node m_last;
-};
-
 Node NodeCreate()
 {
     Node node = calloc(1, sizeof(*node));

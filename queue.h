@@ -12,6 +12,22 @@
 typedef struct Queue_t* Queue;
 typedef struct Node_t* Node;
 
+struct Node_t
+{
+    int connfd;
+    struct timeval m_arrival;
+    Node m_previous;
+    Node m_next;
+};
+
+struct Queue_t
+{
+    int size;
+    int max;
+    Node m_first;
+    Node m_last;
+};
+
 typedef enum {
     QUEUE_SUCCESS,
     QUEUE_NULL_ARGUMENT,
