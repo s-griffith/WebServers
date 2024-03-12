@@ -49,13 +49,13 @@ void *ThreadsHandle(void *arguments)
     struct Args *queues = arguments;
     while (1)
     {
-        Node request = dequeue(queues->waiting); // good story:)
+        struct Node request = dequeue(queues->waiting); // good story:)
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL)) {
             //error!
         }
         dispatch -= request->m_arrival;
-        int status = requestHandle(connfd);
+        int status = requestHandle(request->connfd);
         Close(connfd);
         free(request);
         switch (status)
@@ -131,7 +131,7 @@ int main(int argc, char *argv[])
             }
             if (!strcmp(argv[4], "dh"))
             {
-                Close(dequeue(waiting)); // by piazza it cannot be empty
+                Close(dequeue(waiting)->conffd); // by piazza it cannot be empty
                 sumOfProcess--;
             }
         }
