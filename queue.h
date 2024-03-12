@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include "request.h"
-#include "segel.h"
+//#include "segel.h"
 #include <sys/time.h>
 
 
@@ -44,7 +44,7 @@ void QueueDestroy(Queue queue);
 
 QueueResult enqueue(Queue queue, int item, struct timeval arrival);
 
-Node dequeue(Queue queue);
+int dequeue(Queue queue, struct timeval* arrival);
 
 int isEmpty(Queue queue);
 

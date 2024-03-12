@@ -71,11 +71,11 @@ QueueResult enqueue(Queue queue, int item, struct timeval arrival)
         return QUEUE_SUCCESS;
     }
     Node node = NodeCreate();
-    node->m_arrival = arrival;
     if (!node)
     {
         return QUEUE_ERROR;
     }
+    node->m_arrival = arrival;
     node->connfd = item;
     node->m_previous = queue->m_last;
     queue->m_last->m_next = node;
@@ -87,7 +87,7 @@ QueueResult enqueue(Queue queue, int item, struct timeval arrival)
 }
 
 // Add condition variables!
-Node dequeue(Queue queue)
+int dequeue(Queue queue, struct timeval* arrival)
 {
     if (!queue)
     {
@@ -100,8 +100,11 @@ Node dequeue(Queue queue)
         pthread_cond_wait(&cond, &m);
     }
     Node toRemove = queue->m_first;
-    //int item = toRemove->connfd;
-    if (!toRemove->m_next) // same as: queue->size == 1
+    int item = toRemove->connfd;
+    if (arrival != NULL) {
+        *arrival = toRemove->m_arrival;
+    }
+    if (queue->size == 1) // same as: queue->size == 1
     {
         // leave an empty node:
         toRemove->connfd = 0;
@@ -110,11 +113,11 @@ Node dequeue(Queue queue)
     {
         toRemove->m_next->m_previous = NULL;
         queue->m_first = toRemove->m_next;
-        //free(toRemove);
+        free(toRemove);
     }
     queue->size--;
     pthread_mutex_unlock(&m);
-    return toRemove;
+    return item;
 }
 
 int isEmpty(Queue queue)
@@ -136,4 +139,13 @@ int isFull(Queue queue)
 int getSize(Queue queue)
 {
     return queue->size;
+}
+
+int main() {
+    Queue q = QueueCreate(5);
+    struct timeval curr;
+    gettimeofday(&curr, NULL);
+    enqueue(q, 3, curr);
+    Node n = dequeue(q);
+    printf("n's ID: %d\n", n->connfd);
 }
