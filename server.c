@@ -87,9 +87,9 @@ int main(int argc, char *argv[])
         stats[i]->stat_req = 0;
         stats[i]->dynm_req = 0;
         stats[i]->total_req = 0;
-        queues[i]->waiting = waiting;
-        queues[i]->handled = handled;
-        queues[i]->stats = stats[i];
+        queues[i].waiting = waiting;
+        queues[i].handled = handled;
+        queues[i].stats = stats[i];
         int err = pthread_create(&threads[i], NULL, ThreadsHandle, (void *)&queues[i]);
         if (err != 0)
         {
