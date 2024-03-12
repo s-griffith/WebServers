@@ -16,14 +16,6 @@ pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
 int sumOfProcess = 0;
 
-typedef struct Threads_stats
-{
-    int id;
-    int stat_req;
-    int dynm_req;
-    int total_req;
-} *threads_stats;
-
 typedef struct Args
 {
     Queue waiting;
