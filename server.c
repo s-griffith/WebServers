@@ -84,11 +84,11 @@ int main(int argc, char *argv[])
     struct Args queues[threads_size];
     for (int i = 0; i < threads_size; i++)
     {
-        threads_stats stat = calloc(1, sizeof(*threads_stats));
+        threads_stats stat = calloc(1, sizeof(struct Threads_stats));
         if (!stat) {
-            return NULL; //ERROR!
+            return -1; //ERROR!
         }
-        *stats[i] = stat;
+        stats[i] = stat;
         stats[i]->id = i;
         stats[i]->stat_req = 0;
         stats[i]->dynm_req = 0;
