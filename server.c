@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
             {
                 pthread_cond_wait(&cond_flush, &mutex_1);
             }
-             if (!strcmp(argv[4], "dr"))
+             if (!strcmp(argv[4], "random"))
             {
                 sumOfProcess -= dequeueHalfRandom(waiting);
             }
