@@ -11,8 +11,6 @@
 // Repeatedly handles HTTP requests sent to this port number.
 // Most of the work is done within routines written in request.c
 //
-#define STATIC 1
-#define DYNAMIC 0
 pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
 int sumOfProcess = 0;
@@ -46,28 +44,19 @@ void *ThreadsHandle(void *arguments)
         struct timeval arrival;
         int connfd = dequeue(queues->waiting, &arrival); // good story:)
         struct timeval dispatch;
-        if (gettimeofday(&dispatch, NULL)) {
-            //error!
+        if (gettimeofday(&dispatch, NULL))
+        {
+            // error!
         }
         struct timeval res;
         timersub(&dispatch, &arrival, &res);
-        int status = requestHandle(connfd, arrival, res, queues->stats);
+        requestHandle(connfd, arrival, res, queues->stats);
         Close(connfd);
-        switch (status)
-        {
-        case STATIC:
-            queues->stats->stat_req++;
-            break;
-        case DYNAMIC:
-            queues->stats->dynm_req++;
-            break;
-        }
-        queues->stats->total_req++;
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
         pthread_mutex_unlock(&mutex_1);
-        //printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
+        // printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
     }
     // How do we want to break this loop????????????????????????????????????????????????????
 }
@@ -85,8 +74,9 @@ int main(int argc, char *argv[])
     for (int i = 0; i < threads_size; i++)
     {
         threads_stats stat = calloc(1, sizeof(struct Threads_stats));
-        if (!stat) {
-            return -1; //ERROR!
+        if (!stat)
+        {
+            return -1; // ERROR!
         }
         stats[i] = stat;
         stats[i]->id = i;
@@ -110,8 +100,9 @@ int main(int argc, char *argv[])
         clientlen = sizeof(clientaddr);
         connfd = Accept(listenfd, (SA *)&clientaddr, (socklen_t *)&clientlen);
         struct timeval arrival;
-        if (gettimeofday(&arrival, NULL)) {
-            //error!
+        if (gettimeofday(&arrival, NULL))
+        {
+            // error!
         }
         isFull = 0;
         pthread_mutex_lock(&mutex_1);

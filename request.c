@@ -181,7 +181,7 @@ void requestServeStatic(int fd, char *filename, int filesize, struct timeval arr
 }
 
 // handle a request
-int requestHandle(int fd, struct timeval arrival, struct timeval dispatch, threads_stats t_stats)
+void requestHandle(int fd, struct timeval arrival, struct timeval dispatch, threads_stats t_stats)
 {
    int is_static;
    struct stat sbuf;
@@ -194,11 +194,11 @@ int requestHandle(int fd, struct timeval arrival, struct timeval dispatch, threa
    sscanf(buf, "%s %s %s", method, uri, version);
 
    printf("%s %s %s\n", method, uri, version);
-
+   t_stats->total_req++;
    if (strcasecmp(method, "GET"))
    {
       requestError(fd, method, "501", "Not Implemented", "OS-HW3 Server does not implement this method", arrival, dispatch, t_stats);
-      return HANDLE_ERROR;
+      return;
    }
    requestReadhdrs(&rio);
 
@@ -206,7 +206,7 @@ int requestHandle(int fd, struct timeval arrival, struct timeval dispatch, threa
    if (stat(filename, &sbuf) < 0)
    {
       requestError(fd, filename, "404", "Not found", "OS-HW3 Server could not find this file", arrival, dispatch, t_stats);
-      return HANDLE_ERROR;
+      return;
    }
 
    if (is_static)
@@ -214,19 +214,19 @@ int requestHandle(int fd, struct timeval arrival, struct timeval dispatch, threa
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IRUSR & sbuf.st_mode))
       {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not read this file", arrival, dispatch, t_stats);
-         return HANDLE_ERROR;
+         return;
       }
+      t_stats->stat_req++;
       requestServeStatic(fd, filename, sbuf.st_size, arrival, dispatch, t_stats);
-      return is_static;
    }
    else
    {
       if (!(S_ISREG(sbuf.st_mode)) || !(S_IXUSR & sbuf.st_mode))
       {
          requestError(fd, filename, "403", "Forbidden", "OS-HW3 Server could not run this CGI program", arrival, dispatch, t_stats);
-         return HANDLE_ERROR;
+         return;
       }
+      t_stats->dynm_req++;
       requestServeDynamic(fd, filename, cgiargs, arrival, dispatch, t_stats);
-      return is_static;
    }
 }
