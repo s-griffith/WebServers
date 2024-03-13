@@ -213,9 +213,7 @@ int dequeueHalfRandom(Queue queue)
     int *chosenIndices = (int *)malloc((numToRemove) * sizeof(int));
     randArray(chosenIndices, numToRemove, queue->size);
 
-    int count = 0;
     Node current = queue->m_first;
-    Node next;
 
     qsort(chosenIndices, numToRemove, sizeof(int), compare);
     for (int j = 0; j < chosenIndices[0]; ++j)
@@ -233,32 +231,4 @@ int dequeueHalfRandom(Queue queue)
     }
     pthread_mutex_unlock(&m);
     return numToRemove;
-}
-
-int main()
-{
-
-    struct timeval t;
-    gettimeofday(&t, NULL);
-    Queue q = QueueCreate(10);
-    enqueue(q, 10, t);
-    enqueue(q, 1, t);
-    enqueue(q, 2, t);
-    enqueue(q, 3, t);
-    enqueue(q, 4, t);
-    enqueue(q, 5, t);
-    //enqueue(q, 6, t);
-    // enqueue(q, 10);
-    enqueue(q, 7, t);
-    enqueue(q, 8, t);
-    //enqueue(q, 9, t);
-    dequeueHalfRandom(q);
-    Node current = q->m_first;
-    while (current)
-    {
-        printf("%d\n", current->connfd);
-        current = current->m_next;
-    }
-
-    return 0;
 }
