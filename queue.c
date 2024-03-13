@@ -87,7 +87,7 @@ QueueResult enqueue(Queue queue, int item, struct timeval arrival)
 }
 
 // Add condition variables!
-int dequeue(Queue queue, struct timeval* arrival)
+int dequeue(Queue queue, struct timeval *arrival)
 {
     if (!queue)
     {
@@ -101,7 +101,8 @@ int dequeue(Queue queue, struct timeval* arrival)
     }
     Node toRemove = queue->m_first;
     int item = toRemove->connfd;
-    if (arrival != NULL) {
+    if (arrival != NULL)
+    {
         *arrival = toRemove->m_arrival;
     }
     if (queue->size == 1) // same as: queue->size == 1
@@ -141,10 +142,12 @@ int getSize(Queue queue)
     return queue->size;
 }
 
-
-int isInArray(int arr[], int size, int x) {
-    for (int i = 0; i < size; i++) {
-        if (arr[i] == x) {
+int isInArray(int arr[], int size, int x)
+{
+    for (int i = 0; i < size; i++)
+    {
+        if (arr[i] == x)
+        {
             // Return the index of the element if found
             return 1;
         }
@@ -152,57 +155,110 @@ int isInArray(int arr[], int size, int x) {
     // Return -1 if the element is not found in the array
     return 0;
 }
-void randArray(int *array, int size, int range){
+void randArray(int *array, int size, int range)
+{
     int index;
     srand(time(NULL));
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < size; i++)
+    {
         array[i] = -1;
-        do {
+        do
+        {
             index = rand() % range;
         } while (isInArray(array, i, index));
-        
+
         array[i] = index;
-        //printf("I: %d, Index: %d\n", i, array[i]);
+        // printf("I: %d, Index: %d\n", i, array[i]);
     }
 }
-int dequeueHalfRandom(Queue queue) {
-    int numToRemove = (queue->size+1)/2;
+
+int compare(const void *a, const void *b)
+{
+    return (*(int *)a - *(int *)b);
+}
+
+void dequeueByNode(Queue queue, Node current)
+{
+    Node next = current->m_next;
+    if (queue->size == 1)
+    {
+        current->connfd = 0; // maybe -1
+        queue->size--;
+        return; //????? look in piazza
+    }
+    if (!current->m_previous)
+    { // current is first
+        queue->m_first = next;
+        queue->m_first->m_previous = NULL; // current->m_next is not null if queue->size != 1
+    }
+    else if (!current->m_next)
+    {                                        // current is last
+        queue->m_last = current->m_previous; // current->m_previous is not null if queue->size != 1
+        queue->m_last->m_next = NULL;
+    }
+    else
+    {
+        current->m_previous->m_next = current->m_next;
+        current->m_next->m_previous = current->m_previous;
+    }
+    // printf("deque: %d\n", count);
+    queue->size--;
+    free(current);
+}
+
+int dequeueHalfRandom(Queue queue)
+{
+    int numToRemove = (queue->size + 1) / 2;
     pthread_mutex_lock(&m);
-    //printf("Size: %d\n", numToRemove);
     int *chosenIndices = (int *)malloc((numToRemove) * sizeof(int));
     randArray(chosenIndices, numToRemove, queue->size);
 
     int count = 0;
     Node current = queue->m_first;
     Node next;
-    if(queue->size == 1){
-        current->connfd = 0; //maybe -1
-        queue->size--;
-        return 1; //????? look in piazza
+
+    qsort(chosenIndices, numToRemove, sizeof(int), compare);
+    for (int j = 0; j < chosenIndices[0]; ++j)
+    {
+        current = current->m_next;
     }
-    while (current != NULL) {
-        next = current->m_next;
-        if (isInArray(chosenIndices, (queue->size+1/2), count)) {
-            if(!current->m_previous){//current is first
-                queue->m_first = next;
-                queue->m_first->m_previous = NULL; //current->m_next is not null if queue->size != 1
-            }
-            else if(!current->m_next){//current is last
-                queue->m_last = current->m_previous; //current->m_previous is not null if queue->size != 1
-                queue->m_last->m_next = NULL;
-            }
-            else{
-                current->m_previous->m_next = current->m_next;
-                current->m_next->m_previous = current->m_previous;
-            }
-            //printf("deque: %d\n", count);
-            queue->size--;
-            free(current);
+    dequeueByNode(queue, current);
+    for (int i = 1; i < numToRemove; ++i)
+    {
+        for (int j = chosenIndices[i - 1]; j < chosenIndices[i]; ++j)
+        {
+            current = current->m_next;
         }
-        current = next;
-        count++;
+        dequeueByNode(queue, current);
     }
     pthread_mutex_unlock(&m);
     return numToRemove;
 }
 
+int main()
+{
+
+    struct timeval t;
+    gettimeofday(&t, NULL);
+    Queue q = QueueCreate(10);
+    enqueue(q, 10, t);
+    enqueue(q, 1, t);
+    enqueue(q, 2, t);
+    enqueue(q, 3, t);
+    enqueue(q, 4, t);
+    enqueue(q, 5, t);
+    //enqueue(q, 6, t);
+    // enqueue(q, 10);
+    enqueue(q, 7, t);
+    enqueue(q, 8, t);
+    //enqueue(q, 9, t);
+    dequeueHalfRandom(q);
+    Node current = q->m_first;
+    while (current)
+    {
+        printf("%d\n", current->connfd);
+        current = current->m_next;
+    }
+
+    return 0;
+}
