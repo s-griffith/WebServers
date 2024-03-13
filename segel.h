@@ -25,6 +25,14 @@
 #include <arpa/inet.h>
 
 
+typedef struct Threads_stats
+{
+    int id;
+    int stat_req;
+    int dynm_req;
+    int total_req;
+} *threads_stats;
+
 /* Default file permissions are DEF_MODE & ~DEF_UMASK */
 /* $begin createmasks */
 #define DEF_MODE   S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH

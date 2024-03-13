@@ -1,5 +1,6 @@
 #include "queue.h"
 #include <sys/time.h>
+#include "segel.h"
 
 //
 // server.c: A very, very simple web server
