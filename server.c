@@ -13,6 +13,7 @@
 //
 pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
+pthread_cond_t cond_flush = PTHREAD_COND_INITIALIZER;
 int sumOfProcess = 0;
 
 typedef struct Args
@@ -55,6 +56,9 @@ void *ThreadsHandle(void *arguments)
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
+        if(sumOfProcess == 0){
+            pthread_cond_signal(&cond_flush);
+        }
         pthread_mutex_unlock(&mutex_1);
         // printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
     }
@@ -124,6 +128,14 @@ int main(int argc, char *argv[])
             {
                 Close(dequeue(waiting, NULL)); // by piazza it cannot be empty
                 sumOfProcess--;
+            }
+            if (!strcmp(argv[4], "bf"))
+            {
+                pthread_cond_wait(&cond_flush, &mutex_1);
+            }
+             if (!strcmp(argv[4], "dr"))
+            {
+                sumOfProcess -= dequeueHalfRandom(waiting);
             }
         }
         pthread_mutex_unlock(&mutex_1);

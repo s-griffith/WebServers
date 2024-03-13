@@ -54,6 +54,7 @@ int getSize(Queue queue);
 
 Node getHead(Queue queue);
 
+int dequeueHalfRandom(Queue queue);
 
 
 

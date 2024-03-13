@@ -140,3 +140,69 @@ int getSize(Queue queue)
 {
     return queue->size;
 }
+
+
+int isInArray(int arr[], int size, int x) {
+    for (int i = 0; i < size; i++) {
+        if (arr[i] == x) {
+            // Return the index of the element if found
+            return 1;
+        }
+    }
+    // Return -1 if the element is not found in the array
+    return 0;
+}
+void randArray(int *array, int size, int range){
+    int index;
+    srand(time(NULL));
+    for (int i = 0; i < size; i++) {
+        array[i] = -1;
+        do {
+            index = rand() % range;
+        } while (isInArray(array, i, index));
+        
+        array[i] = index;
+        //printf("I: %d, Index: %d\n", i, array[i]);
+    }
+}
+int dequeueHalfRandom(Queue queue) {
+    int numToRemove = (queue->size+1)/2;
+    pthread_mutex_lock(&m);
+    //printf("Size: %d\n", numToRemove);
+    int *chosenIndices = (int *)malloc((numToRemove) * sizeof(int));
+    randArray(chosenIndices, numToRemove, queue->size);
+
+    int count = 0;
+    Node current = queue->m_first;
+    Node next;
+    if(queue->size == 1){
+        current->connfd = 0; //maybe -1
+        queue->size--;
+        return 1; //????? look in piazza
+    }
+    while (current != NULL) {
+        next = current->m_next;
+        if (isInArray(chosenIndices, (queue->size+1/2), count)) {
+            if(!current->m_previous){//current is first
+                queue->m_first = next;
+                queue->m_first->m_previous = NULL; //current->m_next is not null if queue->size != 1
+            }
+            else if(!current->m_next){//current is last
+                queue->m_last = current->m_previous; //current->m_previous is not null if queue->size != 1
+                queue->m_last->m_next = NULL;
+            }
+            else{
+                current->m_previous->m_next = current->m_next;
+                current->m_next->m_previous = current->m_previous;
+            }
+            //printf("deque: %d\n", count);
+            queue->size--;
+            free(current);
+        }
+        current = next;
+        count++;
+    }
+    pthread_mutex_unlock(&m);
+    return numToRemove;
+}
+
