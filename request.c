@@ -18,8 +18,6 @@ void printStats(char *buf, struct timeval arrival, struct timeval dispatch, thre
    sprintf(buf, "%sStat-Thread-Count:: %d\r\n", buf, t_stats->total_req);
 
    sprintf(buf, "%sStat-Thread-Static:: %d\r\n", buf, t_stats->stat_req);
-
-   sprintf(buf, "%sStat-Thread-Dynamic:: %d\r\n\r\n", buf, t_stats->dynm_req);
 }
 
 // requestError(      fd,    filename,        "404",    "Not found", "OS-HW3 Server could not find this file");
@@ -40,23 +38,19 @@ void requestError(int fd, char *cause, char *errnum, char *shortmsg, char *longm
    // Write out the header information for this response
    sprintf(buf, "HTTP/1.0 %s %s\r\n", errnum, shortmsg);
    Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
 
    sprintf(buf, "Content-Type: text/html\r\n");
    Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
 
-   sprintf(buf, "Content-Length: %lu\r\n\r\n", strlen(body));
+   sprintf(buf, "Content-Length: %lu\r\n", strlen(body));
 
    // call helper function that prints stats
    printStats(buf, arrival, dispatch, t_stats);
-
+   sprintf(buf, "%sStat-Thread-Dynamic:: %d\r\n\r\n", buf, t_stats->dynm_req);
    Rio_writen(fd, buf, strlen(buf));
-   printf("%s", buf);
 
    // Write out the content
    Rio_writen(fd, body, strlen(body));
-   printf("%s", body);
 }
 
 //
@@ -140,6 +134,7 @@ void requestServeDynamic(int fd, char *filename, char *cgiargs, struct timeval a
    sprintf(buf, "HTTP/1.0 200 OK\r\n");
    sprintf(buf, "%sServer: OS-HW3 Web Server\r\n", buf);
    printStats(buf, arrival, dispatch, t_stats);
+   sprintf(buf, "%sStat-Thread-Dynamic:: %d\r\n", buf, t_stats->dynm_req);
    Rio_writen(fd, buf, strlen(buf));
    int pid = 0;
    if ((pid = Fork()) == 0)
@@ -171,8 +166,9 @@ void requestServeStatic(int fd, char *filename, int filesize, struct timeval arr
    sprintf(buf, "HTTP/1.0 200 OK\r\n");
    sprintf(buf, "%sServer: OS-HW3 Web Server\r\n", buf);
    sprintf(buf, "%sContent-Length: %d\r\n", buf, filesize);
-   sprintf(buf, "%sContent-Type: %s\r\n\r\n", buf, filetype);
+   sprintf(buf, "%sContent-Type: %s\r\n", buf, filetype);
    printStats(buf, arrival, dispatch, t_stats);
+   sprintf(buf, "%sStat-Thread-Dynamic:: %d\r\n\r\n", buf, t_stats->dynm_req);
    Rio_writen(fd, buf, strlen(buf));
 
    //  Writes out to the client socket the memory-mapped file
