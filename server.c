@@ -47,7 +47,7 @@ void *ThreadsHandle(void *arguments)
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL))
         {
-            unix_error('Get Time of Day Error\n');
+            unix_error("Get Time of Day Error\n");
         }
         struct timeval res;
         timersub(&dispatch, &arrival, &res);
@@ -106,7 +106,7 @@ int main(int argc, char *argv[])
         struct timeval arrival;
         if (gettimeofday(&arrival, NULL))
         {
-            unix_error('Get Time of Day Error\n');
+            unix_error("Get Time of Day Error\n");
         }
         isFull = 0;
         pthread_mutex_lock(&mutex_1);
