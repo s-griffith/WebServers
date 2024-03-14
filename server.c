@@ -47,7 +47,7 @@ void *ThreadsHandle(void *arguments)
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL))
         {
-            // error!
+            unix_error('Get Time of Day Error\n');
         }
         struct timeval res;
         timersub(&dispatch, &arrival, &res);
@@ -63,7 +63,6 @@ void *ThreadsHandle(void *arguments)
         pthread_mutex_unlock(&mutex_1);
         // printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
     }
-    // How do we want to break this loop????????????????????????????????????????????????????
 }
 
 int main(int argc, char *argv[])
@@ -81,7 +80,7 @@ int main(int argc, char *argv[])
         threads_stats stat = calloc(1, sizeof(struct Threads_stats));
         if (!stat)
         {
-            return -1; // ERROR!
+            app_error("Allocation Error\n");
         }
         stats[i] = stat;
         stats[i]->id = i;
@@ -107,7 +106,7 @@ int main(int argc, char *argv[])
         struct timeval arrival;
         if (gettimeofday(&arrival, NULL))
         {
-            // error!
+            unix_error('Get Time of Day Error\n');
         }
         isFull = 0;
         pthread_mutex_lock(&mutex_1);
@@ -161,10 +160,7 @@ int main(int argc, char *argv[])
         if (!isFull)
         { // maybe sync???
             sumOfProcess++;
-            if (enqueue(waiting, connfd, arrival) != QUEUE_SUCCESS)
-            {
-                perror("Enqueue Error!"); // Decide what to do with errors!
-            }
+            enqueue(waiting, connfd, arrival);
         }
     }
 }
