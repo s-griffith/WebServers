@@ -56,7 +56,8 @@ void *ThreadsHandle(void *arguments)
         pthread_mutex_lock(&mutex_1);
         sumOfProcess--;
         pthread_cond_signal(&c);
-        if(sumOfProcess == 0){
+        if (sumOfProcess == 0)
+        {
             pthread_cond_signal(&cond_flush);
         }
         pthread_mutex_unlock(&mutex_1);
@@ -110,7 +111,6 @@ int main(int argc, char *argv[])
         }
         isFull = 0;
         pthread_mutex_lock(&mutex_1);
-
         while (sumOfProcess >= queue_size)
         {
             if (!strcmp(argv[4], "dt"))
@@ -126,16 +126,34 @@ int main(int argc, char *argv[])
             }
             if (!strcmp(argv[4], "dh"))
             {
-                Close(dequeue(waiting, NULL)); // by piazza it cannot be empty
-                sumOfProcess--;
+                if (queue_size <= threads_size)
+                {
+                    Close(connfd);
+                    isFull = 1;
+                    pthread_mutex_unlock(&mutex_1);
+                    break;
+                }
+                int toClose = dequeue(waiting, NULL);
+                if (toClose != -1)
+                {
+                    sumOfProcess--;
+                    Close(toClose); // by piazza it cannot be empty
+                }
             }
             if (!strcmp(argv[4], "bf"))
             {
                 pthread_cond_wait(&cond_flush, &mutex_1);
             }
-             if (!strcmp(argv[4], "random"))
+            if (!strcmp(argv[4], "random"))
             {
-                sumOfProcess -= dequeueHalfRandom(waiting);
+                if (queue_size <= threads_size)
+                {
+                    Close(connfd);
+                    pthread_mutex_unlock(&mutex_1);
+                    isFull = 1;
+                    break;
+                }
+                sumOfProcess -= dequeueHalfRandom(waiting); /// check
             }
         }
         pthread_mutex_unlock(&mutex_1);

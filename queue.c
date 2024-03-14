@@ -179,6 +179,8 @@ int compare(const void *a, const void *b)
 
 void dequeueByNode(Queue queue, Node current)
 {
+    Close(current->connfd);
+
     Node next = current->m_next;
     if (queue->size == 1)
     {
@@ -208,8 +210,12 @@ void dequeueByNode(Queue queue, Node current)
 
 int dequeueHalfRandom(Queue queue)
 {
+pthread_mutex_lock(&m);
     int numToRemove = (queue->size + 1) / 2;
-    pthread_mutex_lock(&m);
+    if(!numToRemove){
+        pthread_mutex_unlock(&m);
+        return 0;
+    }
     int *chosenIndices = (int *)malloc((numToRemove) * sizeof(int));
     randArray(chosenIndices, numToRemove, queue->size);
 
