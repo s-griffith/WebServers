@@ -43,6 +43,8 @@ struct Queue_t
     Node m_last;
 };
 
+//----------------------------------------------Create and Destroy------------------------------------------------------
+
 Node NodeCreate()
 {
     Node node = calloc(1, sizeof(*node));
@@ -84,6 +86,8 @@ void QueueDestroy(Queue queue)
     free(queue);
 }
 
+//----------------------------------------------Enqueue and Dequeue-----------------------------------------------------
+
 void enqueue(Queue queue, int item, struct timeval arrival)
 {
     if (!queue)
@@ -108,6 +112,7 @@ void enqueue(Queue queue, int item, struct timeval arrival)
     Node node = NodeCreate();
     if (!node)
     {
+        QueueDestroy(queue);
         app_error("Allocation Error\n");
     }
     node->m_arrival = arrival;
@@ -153,11 +158,6 @@ int dequeue(Queue queue, struct timeval *arrival)
     return item;
 }
 
-int getSize(Queue queue)
-{
-    return queue->m_size;
-}
-
 int dequeueHalfRandom(Queue queue)
 {
     pthread_mutex_lock(&m);
@@ -192,19 +192,34 @@ int dequeueHalfRandom(Queue queue)
 
 //----------------------------------------------Internal Helper Functions-----------------------------------------------
 
+/*
+ * Determines if an element is in the array
+ * @param arr: The array to search
+ * @param size: The size of the array
+ * @param x: The value to search for
+ * @return
+ *      0 if not found, 1 if found
+ */
 int isInArray(int arr[], int size, int x)
 {
     for (int i = 0; i < size; i++)
     {
         if (arr[i] == x)
         {
-            // Return the index of the element if found
             return 1;
         }
     }
-    // Return -1 if the element is not found in the array
     return 0;
 }
+
+/*
+ * Creates a random array
+ * @param array: The array to be filled
+ * @param size: The size of the array to be filled
+ * @param range: The range of numbers to be created
+ * @return
+ *      void
+ */
 void randArray(int *array, int size, int range)
 {
     int index;
@@ -218,15 +233,28 @@ void randArray(int *array, int size, int range)
         } while (isInArray(array, i, index));
 
         array[i] = index;
-        // printf("I: %d, Index: %d\n", i, array[i]);
     }
 }
 
+/*
+ * Compares two numbers
+ * @param a: The first number to be checked, as void*
+ * @param b: The second number to be checked, as void*
+ * @return
+ *      The difference between the two numbers
+ */
 int compare(const void *a, const void *b)
 {
     return (*(int *)a - *(int *)b);
 }
 
+/*
+ * Removes a specific node from the queue.
+ * @param queue: The queue to remove from
+ * @param current: The node to be removed
+ * @return
+ *      void
+ */
 void dequeueByNode(Queue queue, Node current)
 {
     Close(current->connfd);
@@ -234,18 +262,18 @@ void dequeueByNode(Queue queue, Node current)
     Node next = current->m_next;
     if (queue->m_size == 1)
     {
-        current->connfd = 0; // maybe -1
+        current->connfd = 0;
         queue->m_size--;
-        return; //????? look in piazza
+        return;
     }
     if (!current->m_previous)
-    { // current is first
+    {
         queue->m_first = next;
-        queue->m_first->m_previous = NULL; // current->m_next is not null if queue->m_size != 1
+        queue->m_first->m_previous = NULL;
     }
     else if (!current->m_next)
-    {                                        // current is last
-        queue->m_last = current->m_previous; // current->m_previous is not null if queue->m_size != 1
+    {
+        queue->m_last = current->m_previous;
         queue->m_last->m_next = NULL;
     }
     else
@@ -253,7 +281,6 @@ void dequeueByNode(Queue queue, Node current)
         current->m_previous->m_next = current->m_next;
         current->m_next->m_previous = current->m_previous;
     }
-    // printf("deque: %d\n", count);
     queue->m_size--;
     free(current);
 }

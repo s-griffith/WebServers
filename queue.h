@@ -58,21 +58,11 @@ void enqueue(Queue queue, int item, struct timeval arrival);
 int dequeue(Queue queue, struct timeval* arrival);
 
 /*
- * Returns the current size of the given queue
- * @param queue: The queue
- * @return
- *      The current size of the queue
-*/
-int getSize(Queue queue);
-
-/*
  * Randomly removes half of the items in the queue
  * @param queue: The queue to be diluted
  * @return
  *      The number of items removed
 */
 int dequeueHalfRandom(Queue queue);
-
-
 
 #endif //QUEUE_H

@@ -5,8 +5,6 @@
 #include "segel.h"
 #include "request.h"
 
-#define HANDLE_ERROR -1;
-
 void printStats(char *buf, struct timeval arrival, struct timeval dispatch, threads_stats t_stats)
 {
    sprintf(buf, "%sStat-Req-Arrival:: %lu.%06lu\r\n", buf, arrival.tv_sec, arrival.tv_usec);

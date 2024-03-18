@@ -2,28 +2,33 @@
 #include <sys/time.h>
 #include "segel.h"
 
-//
-// server.c: A very, very simple web server
-//
-// To run:
-//  ./server <portnum (above 2000)>
-//
-// Repeatedly handles HTTP requests sent to this port number.
-// Most of the work is done within routines written in request.c
-//
+// Locks and condition variables:
 pthread_mutex_t mutex_1 = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t c = PTHREAD_COND_INITIALIZER;
 pthread_cond_t cond_flush = PTHREAD_COND_INITIALIZER;
 int sumOfProcess = 0;
 
+/*
+ * A struct representing the arguments needed for ThreadsHandle()
+ * waiting: a queue holding all the waiting requests
+ * stats: a struct holding thread statistics
+*/
 typedef struct Args
 {
     Queue waiting;
-    Queue handled;
     threads_stats stats;
 } Args;
 
-// HW3: Parse the new arguments too
+/*
+ * Parses the arguments received from the command line
+ * @param port: The port to listen to
+ * @param threads: The number of threads to create
+ * @param queue_size: The size of the queue to create
+ * @param argc: The number of arguments received
+ * @param argv: The arguments received
+ * @return 
+ *      void
+*/
 void getargs(int *port, int *threads, int *queue_size, int argc, char *argv[])
 {
     if (argc < 5)
@@ -36,17 +41,23 @@ void getargs(int *port, int *threads, int *queue_size, int argc, char *argv[])
     *queue_size = atoi(argv[3]);
 }
 
-// Check for errors and check QUEUESTATUS
+/*
+ * Manages the handling of requests by threads
+ * @param arguments: The struct of arguments containing the waiting requests and thread stats
+ * @return 
+ *      void
+*/
 void *ThreadsHandle(void *arguments)
 {
     struct Args *queues = arguments;
     while (1)
     {
         struct timeval arrival;
-        int connfd = dequeue(queues->waiting, &arrival); // good story:)
+        int connfd = dequeue(queues->waiting, &arrival); 
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL))
         {
+            QueueDelete(queues->waiting);
             unix_error("Get Time of Day Error\n");
         }
         struct timeval res;
@@ -61,25 +72,28 @@ void *ThreadsHandle(void *arguments)
             pthread_cond_signal(&cond_flush);
         }
         pthread_mutex_unlock(&mutex_1);
-        // printf("ID: %d | stat_req: %d | dynm_req: %d | total_req: %d\n", queues->stats.id, queues->stats.stat_req, queues->stats.dynm_req, queues->stats.total_req);
     }
 }
 
+/*
+ * Listens for requests and takes care of them according to a given algorithm:
+*/
 int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen, threads_size, queue_size;
     struct sockaddr_in clientaddr;
     getargs(&port, &threads_size, &queue_size, argc, argv);
     Queue waiting = QueueCreate(queue_size);
-    Queue handled = QueueCreate(queue_size);
     pthread_t threads[threads_size];
     threads_stats stats[threads_size];
     struct Args queues[threads_size];
+    //Creates threads according to the given size:
     for (int i = 0; i < threads_size; i++)
     {
         threads_stats stat = calloc(1, sizeof(struct Threads_stats));
         if (!stat)
         {
+            QueueDestroy(waiting);
             app_error("Allocation Error\n");
         }
         stats[i] = stat;
@@ -88,17 +102,19 @@ int main(int argc, char *argv[])
         stats[i]->dynm_req = 0;
         stats[i]->total_req = 0;
         queues[i].waiting = waiting;
-        queues[i].handled = handled;
         queues[i].stats = stats[i];
         int err = pthread_create(&threads[i], NULL, ThreadsHandle, (void *)&queues[i]);
         if (err != 0)
         {
+            QueueDestroy(waiting);
             posix_error(err, "pthread_create error");
         }
     }
+
     listenfd = Open_listenfd(port);
     int isFull = 0;
 
+    //Listens for and accepts requests:
     while (1)
     {
         clientlen = sizeof(clientaddr);
@@ -106,10 +122,12 @@ int main(int argc, char *argv[])
         struct timeval arrival;
         if (gettimeofday(&arrival, NULL))
         {
+            QueueDestroy(waiting);
             unix_error("Get Time of Day Error\n");
         }
         isFull = 0;
         pthread_mutex_lock(&mutex_1);
+
         while (sumOfProcess >= queue_size)
         {
             if (!strcmp(argv[4], "dt"))
@@ -136,7 +154,7 @@ int main(int argc, char *argv[])
                 if (toClose != -1)
                 {
                     sumOfProcess--;
-                    Close(toClose); // by piazza it cannot be empty
+                    Close(toClose);
                 }
             }
             if (!strcmp(argv[4], "bf"))
@@ -152,13 +170,14 @@ int main(int argc, char *argv[])
                     isFull = 1;
                     break;
                 }
-                sumOfProcess -= dequeueHalfRandom(waiting); /// check
+                sumOfProcess -= dequeueHalfRandom(waiting);
             }
         }
+
         pthread_mutex_unlock(&mutex_1);
 
         if (!isFull)
-        { // maybe sync???
+        {
             sumOfProcess++;
             enqueue(waiting, connfd, arrival);
         }
