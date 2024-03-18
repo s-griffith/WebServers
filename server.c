@@ -12,7 +12,7 @@ int sumOfProcess = 0;
  * A struct representing the arguments needed for ThreadsHandle()
  * waiting: a queue holding all the waiting requests
  * stats: a struct holding thread statistics
-*/
+ */
 typedef struct Args
 {
     Queue waiting;
@@ -26,9 +26,9 @@ typedef struct Args
  * @param queue_size: The size of the queue to create
  * @param argc: The number of arguments received
  * @param argv: The arguments received
- * @return 
+ * @return
  *      void
-*/
+ */
 void getargs(int *port, int *threads, int *queue_size, int argc, char *argv[])
 {
     if (argc < 5)
@@ -44,16 +44,16 @@ void getargs(int *port, int *threads, int *queue_size, int argc, char *argv[])
 /*
  * Manages the handling of requests by threads
  * @param arguments: The struct of arguments containing the waiting requests and thread stats
- * @return 
+ * @return
  *      void
-*/
+ */
 void *ThreadsHandle(void *arguments)
 {
     struct Args *queues = arguments;
     while (1)
     {
         struct timeval arrival;
-        int connfd = dequeue(queues->waiting, &arrival); 
+        int connfd = dequeue(queues->waiting, &arrival);
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL))
         {
@@ -77,7 +77,7 @@ void *ThreadsHandle(void *arguments)
 
 /*
  * Listens for requests and takes care of them according to a given algorithm:
-*/
+ */
 int main(int argc, char *argv[])
 {
     int listenfd, connfd, port, clientlen, threads_size, queue_size;
@@ -87,7 +87,7 @@ int main(int argc, char *argv[])
     pthread_t threads[threads_size];
     threads_stats stats[threads_size];
     struct Args queues[threads_size];
-    //Creates threads according to the given size:
+    // Creates threads according to the given size:
     for (int i = 0; i < threads_size; i++)
     {
         threads_stats stat = calloc(1, sizeof(struct Threads_stats));
@@ -114,7 +114,7 @@ int main(int argc, char *argv[])
     listenfd = Open_listenfd(port);
     int isFull = 0;
 
-    //Listens for and accepts requests:
+    // Listens for and accepts requests:
     while (1)
     {
         clientlen = sizeof(clientaddr);
@@ -150,12 +150,8 @@ int main(int argc, char *argv[])
                     pthread_mutex_unlock(&mutex_1);
                     break;
                 }
-                int toClose = dequeue(waiting, NULL);
-                if (toClose != -1)
-                {
-                    sumOfProcess--;
-                    Close(toClose);
-                }
+                Close(dequeue(waiting, NULL));
+                sumOfProcess--;
             }
             if (!strcmp(argv[4], "bf"))
             {
