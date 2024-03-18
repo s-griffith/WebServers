@@ -57,7 +57,7 @@ void *ThreadsHandle(void *arguments)
         struct timeval dispatch;
         if (gettimeofday(&dispatch, NULL))
         {
-            QueueDelete(queues->waiting);
+            QueueDestroy(queues->waiting);
             unix_error("Get Time of Day Error\n");
         }
         struct timeval res;
